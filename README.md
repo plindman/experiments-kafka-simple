@@ -1,25 +1,26 @@
-# Kafka Docker Python Example with HTTP Producer
+# Kafka Docker Python Example with Containerized Producer and Consumer
 
-This project demonstrates a simple example of using Kafka with Docker and Python. It includes a producer that accepts HTTP requests to send messages to a Kafka topic and a consumer that reads these messages, performs a simple transformation, and logs the result.
+This project demonstrates a simple example of using Kafka with Docker and Python. It includes a producer that accepts HTTP requests to send messages to a Kafka topic and a consumer that reads these messages, performs a simple transformation, and logs the result. Both the producer and consumer run in Docker containers.
 
 ## Prerequisites
 
 - Docker
 - Docker Compose
-- Python 3.7+
 
 ## Project Structure
 
 ```
 kafka-docker-python/
 ├── docker-compose.yml
+├── Dockerfile.producer
+├── Dockerfile.consumer
 ├── src/
 │   ├── producer.py
 │   └── consumer.py
 └── requirements.txt
 ```
 
-## Setup
+## Setup and Running
 
 1. Clone this repository:
    ```
@@ -27,31 +28,24 @@ kafka-docker-python/
    cd kafka-docker-python
    ```
 
-2. Create a virtual environment and install the requirements:
+2. Start all services using Docker Compose:
    ```
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
-   pip install -r requirements.txt
+   docker-compose up --build
    ```
 
-3. Start the Kafka and Zookeeper containers:
-   ```
-   docker-compose up -d
-   ```
+This command will build the Docker images for the producer and consumer, and start all services including Kafka and Zookeeper.
 
-4. Run the producer:
-   ```
-   python src/producer.py
-   ```
+## How it works
 
-5. In a new terminal, run the consumer:
-   ```
-   python src/consumer.py
-   ```
+1. Docker Compose starts Kafka, Zookeeper, producer, and consumer services.
+2. The producer runs as a Flask server in a Docker container, exposing an HTTP endpoint.
+3. When the producer receives a POST request, it sends the message to the Kafka topic.
+4. The consumer runs in another Docker container, connecting to Kafka and continuously reading messages from the topic.
+5. The consumer performs a simple transformation on the messages and logs the result.
 
 ## Using the HTTP Producer
 
-The producer now exposes an HTTP endpoint to send messages to Kafka. You can use curl to send requests:
+You can use curl to send requests to the producer:
 
 1. Send a message with custom data:
    ```
@@ -73,24 +67,15 @@ The producer now exposes an HTTP endpoint to send messages to Kafka. You can use
    curl http://localhost:5000/health
    ```
 
-## How it works
+## Viewing logs
 
-1. The producer exposes an HTTP endpoint that accepts POST requests with JSON data.
-2. When a request is received, the producer sends the message to a Kafka topic.
-3. The consumer reads messages from the topic, performs a simple transformation (uppercase conversion), and logs the result.
+To view the logs of a specific service:
 
-## VSCode Development
+```
+docker-compose logs -f [service_name]
+```
 
-To set up the project for development in VSCode:
-
-1. Open the project folder in VSCode.
-2. Ensure you have the Python extension installed.
-3. Select the Python interpreter from the virtual environment:
-   - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
-   - Type "Python: Select Interpreter"
-   - Choose the interpreter from the `.venv` folder
-
-This setup will provide better IntelliSense and linting in VSCode.
+Replace [service_name] with kafka, zookeeper, producer, or consumer.
 
 ## Next steps
 
@@ -104,4 +89,9 @@ To extend this example:
 To stop and remove the Docker containers:
 ```
 docker-compose down
+```
+
+To also remove the built images:
+```
+docker-compose down --rmi all
 ```
