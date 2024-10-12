@@ -1,3 +1,4 @@
+import os
 from kafka import KafkaProducer
 import json
 import random
@@ -5,7 +6,8 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
+producer = KafkaProducer(bootstrap_servers=[KAFKA_BROKER],
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 def generate_message(data):

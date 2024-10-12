@@ -1,8 +1,10 @@
+import os
 from kafka import KafkaConsumer
 import json
 
+KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
 consumer = KafkaConsumer('sensor_data',
-                         bootstrap_servers=['localhost:9092'],
+                         bootstrap_servers=[KAFKA_BROKER],
                          value_deserializer=lambda x: json.loads(x.decode('utf-8')))
 
 def process_message(message):
