@@ -1,6 +1,6 @@
-# Kafka Docker Python Example
+# Kafka Docker Python Example with HTTP Producer
 
-This project demonstrates a simple example of using Kafka with Docker and Python. It includes a producer that sends messages to a Kafka topic and a consumer that reads these messages, performs a simple transformation, and logs the result.
+This project demonstrates a simple example of using Kafka with Docker and Python. It includes a producer that accepts HTTP requests to send messages to a Kafka topic and a consumer that reads these messages, performs a simple transformation, and logs the result.
 
 ## Prerequisites
 
@@ -29,8 +29,8 @@ kafka-docker-python/
 
 2. Create a virtual environment and install the requirements:
    ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
    pip install -r requirements.txt
    ```
 
@@ -49,10 +49,48 @@ kafka-docker-python/
    python src/consumer.py
    ```
 
+## Using the HTTP Producer
+
+The producer now exposes an HTTP endpoint to send messages to Kafka. You can use curl to send requests:
+
+1. Send a message with custom data:
+   ```
+   curl -X POST -H "Content-Type: application/json" -d '{"id": 123, "temperature": 25.5, "humidity": 60.0}' http://localhost:5000/send
+   ```
+
+2. Send a message with partial data (missing fields will be randomly generated):
+   ```
+   curl -X POST -H "Content-Type: application/json" -d '{"temperature": 30.0}' http://localhost:5000/send
+   ```
+
+3. Send a message without any data (all fields will be randomly generated):
+   ```
+   curl -X POST -H "Content-Type: application/json" -d '{}' http://localhost:5000/send
+   ```
+
+4. Check the health of the producer:
+   ```
+   curl http://localhost:5000/health
+   ```
+
 ## How it works
 
-1. The producer sends messages with random data to a Kafka topic.
-2. The consumer reads messages from the topic, performs a simple transformation (uppercase conversion), and logs the result.
+1. The producer exposes an HTTP endpoint that accepts POST requests with JSON data.
+2. When a request is received, the producer sends the message to a Kafka topic.
+3. The consumer reads messages from the topic, performs a simple transformation (uppercase conversion), and logs the result.
+
+## VSCode Development
+
+To set up the project for development in VSCode:
+
+1. Open the project folder in VSCode.
+2. Ensure you have the Python extension installed.
+3. Select the Python interpreter from the virtual environment:
+   - Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS)
+   - Type "Python: Select Interpreter"
+   - Choose the interpreter from the `.venv` folder
+
+This setup will provide better IntelliSense and linting in VSCode.
 
 ## Next steps
 
