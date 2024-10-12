@@ -6,7 +6,9 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
+KAFKA_BROKER = os.environ['KAFKA_BROKER']
+PRODUCER_PORT = int(os.environ['PRODUCER_PORT'])
+
 producer = KafkaProducer(bootstrap_servers=[KAFKA_BROKER],
                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
@@ -29,4 +31,4 @@ def health_check():
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=PRODUCER_PORT)

@@ -2,7 +2,8 @@ import os
 from kafka import KafkaConsumer
 import json
 
-KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
+KAFKA_BROKER = os.environ['KAFKA_BROKER']
+
 consumer = KafkaConsumer('sensor_data',
                          bootstrap_servers=[KAFKA_BROKER],
                          value_deserializer=lambda x: json.loads(x.decode('utf-8')))

@@ -1,17 +1,25 @@
-version: '3'
+x-common-variables: &common-variables
+  KAFKA_BROKER: kafka:9092
+  ZOOKEEPER_PORT: 2181
+  KAFKA_PORT: 9092
+  PRODUCER_PORT: 5000
+
 services:
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
-      - "2181:2181"
+      - "${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}"
+    environment:
+      <<: *common-variables
 
   kafka:
     image: wurstmeister/kafka
     ports:
-      - "9092:9092"
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
     environment:
+      <<: *common-variables
       KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
       KAFKA_CREATE_TOPICS: "sensor_data:1:1"
     depends_on:
       - zookeeper
@@ -21,9 +29,9 @@ services:
       context: .
       dockerfile: Dockerfile.producer
     ports:
-      - "5000:5000"
+      - "${PRODUCER_PORT}:${PRODUCER_PORT}"
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      <<: *common-variables
     depends_on:
       - kafka
 
@@ -32,6 +40,6 @@ services:
       context: .
       dockerfile: Dockerfile.consumer
     environment:
-      KAFKA_BROKER: "kafka:9092"
+      <<: *common-variables
     depends_on:
       - kafka
