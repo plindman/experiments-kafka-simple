@@ -1,45 +1,54 @@
-x-common-variables: &common-variables
-  KAFKA_BROKER: kafka:9092
-  ZOOKEEPER_PORT: 2181
-  KAFKA_PORT: 9092
-  PRODUCER_PORT: 5000
-
 services:
   zookeeper:
     image: wurstmeister/zookeeper
-    ports:
-      - "${ZOOKEEPER_PORT}:${ZOOKEEPER_PORT}"
     environment:
-      <<: *common-variables
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_PORT:-2181}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_PORT:-2000}
+    ports:
+      - "${ZOOKEEPER_PORT:-2181}:${ZOOKEEPER_PORT:-2181}"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   kafka:
     image: wurstmeister/kafka
-    ports:
-      - "${KAFKA_PORT}:${KAFKA_PORT}"
     environment:
-      <<: *common-variables
       KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT}
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_PORT:-2181}
       KAFKA_CREATE_TOPICS: "sensor_data:1:1"
+    ports:
+      - "${KAFKA_EXTERNAL_PORT}:${KAFKA_PORT}"
     depends_on:
-      - zookeeper
-
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server=localhost:9092", "--list"]
+      start_period: 15s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
   producer:
     build:
       context: .
       dockerfile: Dockerfile.producer
-    ports:
-      - "${PRODUCER_PORT}:${PRODUCER_PORT}"
     environment:
-      <<: *common-variables
+      KAFKA_BROKER: "kafka:${KAFKA_PORT}"
+      PRODUCER_PORT: "${PRODUCER_PORT}"
+    ports:
+      - "${PRODUCER_EXTERNAL_PORT}:${PRODUCER_PORT}"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy  # Wait until Kafka is healthy
 
   consumer:
     build:
       context: .
       dockerfile: Dockerfile.consumer
     environment:
-      <<: *common-variables
+      KAFKA_BROKER: "kafka:${KAFKA_PORT}"
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy  # Wait until Kafka is healthy
